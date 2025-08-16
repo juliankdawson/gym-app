@@ -8,6 +8,13 @@
       "when": 1754790858791,
       "tag": "0000_gigantic_prowler",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1755135723981,
+      "tag": "0001_sad_cyclops",
+      "breakpoints": true
     }
   ]
 }

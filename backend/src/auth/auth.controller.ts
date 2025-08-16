@@ -1,4 +1,3 @@
-// src/auth/auth.controller.ts
 import { Request, Response } from 'express';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
@@ -12,24 +11,20 @@ import {
 } from './auth.utils.js';
 
 export async function register(req: Request, res: Response) {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ error: 'Name, email and password required' });
 
-  // Check existing
   const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (existing.length) return res.status(409).json({ error: 'Email already registered' });
 
   const password_hash = await hashPassword(password);
 
-  // Insert user
-  const result = await db.insert(users).values({ email, password_hash }).returning({ id: users.id, email: users.email });
+  const result = await db.insert(users).values({ name, email, password_hash }).returning({ id: users.id, email: users.email });
   const created = result[0];
 
-  // Issue tokens
   const accessToken = generateAccessToken({ userId: created.id, email: created.email });
   const refreshToken = generateRefreshToken({ userId: created.id, email: created.email });
 
-  // Save refresh token in DB for this user
   await db.update(users).set({ refresh_token: refreshToken }).where(eq(users.id, created.id));
 
   return res.status(201).json({ accessToken, refreshToken });
@@ -49,7 +44,6 @@ export async function login(req: Request, res: Response) {
   const accessToken = generateAccessToken({ userId: user.id, email: user.email });
   const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
 
-  // Save refresh token (rotate on login)
   await db.update(users).set({ refresh_token: refreshToken }).where(eq(users.id, user.id));
 
   return res.json({ accessToken, refreshToken });
@@ -59,24 +53,20 @@ export async function refresh(req: Request, res: Response) {
   const { refreshToken } = req.body;
   if (!refreshToken) return res.status(400).json({ error: 'Refresh token required' });
 
-  // Verify incoming refresh token cryptographically
+  // Verify incoming refresh token
   try {
-    const payload = verifyRefreshToken(refreshToken); // throws if invalid
-    // payload contains userId, email
+    const payload = verifyRefreshToken(refreshToken);
     const found = await db.select().from(users).where(eq(users.id, payload.userId)).limit(1);
     const user = found[0];
     if (!user) return res.status(401).json({ error: 'User not found' });
 
-    // Check token matches the one stored in DB (rotation / revocation)
     if (!user.refresh_token || user.refresh_token !== refreshToken) {
       return res.status(401).json({ error: 'Refresh token invalid' });
     }
 
-    // Generate new tokens (rotate)
     const newAccessToken = generateAccessToken({ userId: user.id, email: user.email });
     const newRefreshToken = generateRefreshToken({ userId: user.id, email: user.email });
 
-    // Store new refresh token in DB (invalidate old)
     await db.update(users).set({ refresh_token: newRefreshToken }).where(eq(users.id, user.id));
 
     return res.json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
@@ -86,13 +76,11 @@ export async function refresh(req: Request, res: Response) {
 }
 
 export async function logout(req: Request, res: Response) {
-  // client should send refreshToken (or we can read from req.user if provided)
   const { refreshToken } = req.body;
   if (!refreshToken) return res.status(400).json({ error: 'Refresh token required' });
 
   try {
     const payload = verifyRefreshToken(refreshToken);
-    // Clear the stored refresh token for that user
     await db.update(users).set({ refresh_token: null }).where(eq(users.id, payload.userId));
     return res.sendStatus(204);
   } catch {

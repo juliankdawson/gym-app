@@ -1,4 +1,3 @@
-// src/auth/auth.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken } from './auth.utils';
 
@@ -8,8 +7,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 
   const token = header.split(' ')[1];
   try {
-    const payload = verifyAccessToken(token); // throws on invalid/expired
-    // attach user to request
+    const payload = verifyAccessToken(token);
     (req as any).user = { userId: payload.userId, email: payload.email };
     next();
   } catch {

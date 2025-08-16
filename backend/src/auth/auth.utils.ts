@@ -1,4 +1,3 @@
-// src/auth/auth.utils.ts
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
@@ -20,12 +19,10 @@ export function verifyPassword(password: string, hash: string) {
 }
 
 export function generateAccessToken(payload: { userId: number; email: string }) {
-  // short lived
   return jwt.sign(payload, ACCESS_SECRET, { expiresIn: '15m' });
 }
 
 export function generateRefreshToken(payload: { userId: number; email: string }) {
-  // long lived
   return jwt.sign(payload, REFRESH_SECRET, { expiresIn: '365d' });
 }
 

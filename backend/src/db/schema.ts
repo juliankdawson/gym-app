@@ -2,6 +2,7 @@ import { pgTable, serial, varchar, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
+  name: text('name').notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   password_hash: text('password_hash').notNull(),
   refresh_token: text('refresh_token'),
