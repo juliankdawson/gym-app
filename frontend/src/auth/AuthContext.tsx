@@ -4,7 +4,7 @@ import { authApi } from './authApi';
 
 interface User {
   id: number;
-  name?: string;
+  name: string;
   email: string;
 }
 
@@ -18,7 +18,6 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  refreshToken: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,26 +48,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
 
       if (accessToken && refreshToken && userString) {
-        const user = JSON.parse(userString);
-        setState({
-          user,
-          isLoading: false,
-          isAuthenticated: true,
-        });
+        const user: User = JSON.parse(userString);
+        setState({ user, isLoading: false, isAuthenticated: true });
       } else {
-        setState({
-          user: null,
-          isLoading: false,
-          isAuthenticated: false,
-        });
+        setState({ user: null, isLoading: false, isAuthenticated: false });
       }
     } catch (error) {
       console.error('Auth initialization error:', error);
-      setState({
-        user: null,
-        isLoading: false,
-        isAuthenticated: false,
-      });
+      setState({ user: null, isLoading: false, isAuthenticated: false });
     }
   };
 
@@ -91,15 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       const response = await authApi.login(email, password);
-      const user = { id: 0, email };
-      
-      await saveTokens(response.accessToken, response.refreshToken, user);
-      
-      setState({
-        user,
-        isLoading: false,
-        isAuthenticated: true,
-      });
+      await saveTokens(response.accessToken, response.refreshToken, response.user);
+      setState({ user: response.user, isLoading: false, isAuthenticated: true });
     } catch (error) {
       throw error;
     }
@@ -108,59 +88,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (name: string, email: string, password: string) => {
     try {
       const response = await authApi.register(name, email, password);
-      const user = { id: 0, name, email };
-      
-      await saveTokens(response.accessToken, response.refreshToken, user);
-      
-      setState({
-        user,
-        isLoading: false,
-        isAuthenticated: true,
-      });
+      await saveTokens(response.accessToken, response.refreshToken, response.user);
+      setState({ user: response.user, isLoading: false, isAuthenticated: true });
     } catch (error) {
-      throw error;
-    }
-  };
-
-  const refreshToken = async () => {
-    try {
-      const storedRefreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-      if (!storedRefreshToken) throw new Error('No refresh token');
-
-      const response = await authApi.refresh(storedRefreshToken);
-      await saveTokens(response.accessToken, response.refreshToken);
-      
-      // Keep current user state, just refresh tokens
-    } catch (error) {
-      // Refresh failed, logout user
-      await logout();
       throw error;
     }
   };
 
   const logout = async () => {
-    console.log('Logout function called');
-    try {
-      const storedRefreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-      console.log('Retrieved refresh token:', storedRefreshToken ? 'exists' : 'not found');
-      
-      if (storedRefreshToken) {
-        console.log('Calling logout API...');
-        await authApi.logout(storedRefreshToken);
-        console.log('Logout API success');
-      }
-    } catch (error) {
-      console.error('Logout API error:', error);
-      // Continue with local logout even if API fails
-    } finally {
-      await clearTokens();
-      setState({
-        user: null,
-        isLoading: false,
-        isAuthenticated: false,
-      });
+  try {
+    const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+
+    if (refreshToken) {
+      await authApi.logout(refreshToken);
+    } else {
+      console.warn('No refresh token found for logout');
     }
-  };
+  } catch (error) {
+    console.error('Logout API error:', error);
+  } finally {
+    await clearTokens();
+    setState({ user: null, isLoading: false, isAuthenticated: false });
+  }
+};
 
   return (
     <AuthContext.Provider
@@ -169,7 +119,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
-        refreshToken,
       }}
     >
       {children}
@@ -179,8 +128,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 }

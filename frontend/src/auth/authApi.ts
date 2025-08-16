@@ -2,27 +2,38 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = 'http://localhost:3000';
 
-interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
+// User type returned by backend
+export interface User {
+  id: number;
+  name: string;
+  email: string;
 }
 
-class ApiError extends Error {
+// Updated AuthResponse to include user
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+}
+
+export class ApiError extends Error {
   status: number;
-  
+
   constructor(message: string, status: number) {
     super(message);
     this.status = status;
   }
 }
 
+// Helper to get stored access token
 const getAccessToken = async (): Promise<string | null> => {
   return await AsyncStorage.getItem('@auth_access_token');
 };
 
+// Generic API request function
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -31,16 +42,17 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     ...options,
   };
 
-const accessToken = await getAccessToken();
-if (accessToken && !(config.headers as Record<string, string>)['Authorization']) {
-  config.headers = {
-    ...(config.headers as Record<string, string>),
-    Authorization: `Bearer ${accessToken}`,
-  };
-}
+  const accessToken = await getAccessToken();
+  if (accessToken && !(config.headers as Record<string, string>)['Authorization']) {
+    config.headers = {
+      ...(config.headers as Record<string, string>),
+      Authorization: `Bearer ${accessToken}`,
+    };
+  }
+
   try {
     const response = await fetch(url, config);
-    
+
     if (!response.ok) {
       let errorMessage = 'An error occurred';
       try {
@@ -65,6 +77,7 @@ if (accessToken && !(config.headers as Record<string, string>)['Authorization'])
   }
 };
 
+// Auth API methods
 export const authApi = {
   async login(email: string, password: string): Promise<AuthResponse> {
     return await apiRequest('/auth/login', {
@@ -94,5 +107,3 @@ export const authApi = {
     });
   },
 };
-
-export { ApiError };

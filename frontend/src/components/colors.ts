@@ -14,6 +14,7 @@ const Colors = {
     primaryDark: "hsl(357, 52%, 45%)",
     primary: "hsl(357, 52%, 50%)",
     primaryLight: "hsl(357, 52%, 55%)",
+    secondary: "hsl(226, 55%, 51%)",
     backgroundDark: "hsl(0, 0%, 10%)",
     background: "hsl(0, 0%, 15%)",
     backgroundLight: "hsl(0, 0%, 20%)",

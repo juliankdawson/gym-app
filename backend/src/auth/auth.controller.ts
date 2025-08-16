@@ -12,14 +12,19 @@ import {
 
 export async function register(req: Request, res: Response) {
   const { name, email, password } = req.body;
-  if (!name || !email || !password) return res.status(400).json({ error: 'Name, email and password required' });
+  if (!name || !email || !password)
+    return res.status(400).json({ error: 'Name, email and password required' });
 
   const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (existing.length) return res.status(409).json({ error: 'Email already registered' });
 
   const password_hash = await hashPassword(password);
 
-  const result = await db.insert(users).values({ name, email, password_hash }).returning({ id: users.id, email: users.email });
+  const result = await db
+    .insert(users)
+    .values({ name, email, password_hash })
+    .returning({ id: users.id, name: users.name, email: users.email });
+
   const created = result[0];
 
   const accessToken = generateAccessToken({ userId: created.id, email: created.email });
@@ -27,7 +32,15 @@ export async function register(req: Request, res: Response) {
 
   await db.update(users).set({ refresh_token: refreshToken }).where(eq(users.id, created.id));
 
-  return res.status(201).json({ accessToken, refreshToken });
+  return res.status(201).json({
+    accessToken,
+    refreshToken,
+    user: {
+      id: created.id,
+      name: created.name,
+      email: created.email,
+    },
+  });
 }
 
 export async function login(req: Request, res: Response) {
@@ -46,7 +59,15 @@ export async function login(req: Request, res: Response) {
 
   await db.update(users).set({ refresh_token: refreshToken }).where(eq(users.id, user.id));
 
-  return res.json({ accessToken, refreshToken });
+  return res.json({
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    },
+  });
 }
 
 export async function refresh(req: Request, res: Response) {
