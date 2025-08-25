@@ -1,95 +1,85 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, useColorScheme, Dimensions } from "react-native";
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, Dimensions, useColorScheme } from "react-native";
 import ProgramCard from "./ProgramCard";
 import Colors from "./colors";
 
-const recommendedTemplates = [
-  { id: "1", type: "Upper Body", title: "Push-Pull Power", frequency: "4/week" },
-  { id: "2", type: "Full Body", title: "Strength Builder", frequency: "3/week" },
-  { id: "3", type: "Full Body", title: "Strength Builder", frequency: "3/week" },
-  { id: "4", type: "Full Body", title: "Strength Builder", frequency: "3/week" },
-  { id: "5", type: "Full Body", title: "Strength Builder", frequency: "3/week" },
-  { id: "6", type: "Full Body", title: "Strength Builder", frequency: "3/week" }
-];
-
-const customTemplates = [
-  { id: "3", type: "Lower Body", title: "Leg Focus Blast", frequency: "2/week" },
-];
+const { width } = Dimensions.get("window");
 
 export default function WorkoutTemplates() {
   const colorScheme = useColorScheme();
-  const colors = colorScheme === "dark" ? Colors.dark : Colors.light;
+  const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
+  const [tab, setTab] = useState<"saved" | "recommended">("saved");
 
-  const [activeTab, setActiveTab] = useState<"recommended" | "custom">("recommended");
-
-  const data = activeTab === "recommended" ? recommendedTemplates : customTemplates;
+  const programs = [
+    { id: "1", type: "Upper Body", title: "Push-Pull Strength", days: 4 },
+    { id: "2", type: "Full Body", title: "Athletic Performance", days: 3 },
+    { id: "3", type: "Lower Body", title: "Leg Power", days: 2 },
+  ];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Tabs */}
-      <View style={[styles.tabs, { borderBottomColor: colors.backgroundLight }]}>
-        <TouchableOpacity onPress={() => setActiveTab("recommended")}>
-          <Text
+    <View style={styles.container}>
+      {/* Tab Selector */}
+      <View style={[styles.tabContainer, { borderColor: colors.backgroundLight }]}>
+        {["saved", "recommended"].map((t) => (
+          <TouchableOpacity
+            key={t}
             style={[
-              styles.tabText,
-              { color: colors.textMuted },
-              activeTab === "recommended" && [styles.activeTab, { color: colors.primary }],
+              styles.tab,
+              {
+                borderColor: tab === t ? colors.primary : "transparent",
+                backgroundColor: tab === t ? colors.backgroundLight : "transparent",
+              },
             ]}
+            onPress={() => setTab(t as "saved" | "recommended")}
           >
-            Recommended
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setActiveTab("custom")}>
-          <Text
-            style={[
-              styles.tabText,
-              { color: colors.textMuted },
-              activeTab === "custom" && [styles.activeTab, { color: colors.primary }],
-            ]}
-          >
-            Custom
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.tabText,
+                { color: tab === t ? colors.text : colors.textMuted },
+              ]}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {/* Template stack */}
+      {/* Program Cards */}
       <FlatList
-        data={data}
-        keyExtractor={(item) => item.id}
+        data={programs}
         renderItem={({ item }) => (
-          <ProgramCard
-            type={item.type}
-            title={item.title}
-            frequency={item.frequency}
-            style={styles.programCard}
-          />
+          <ProgramCard type={item.type} title={item.title} days={item.days} />
         )}
-        contentContainerStyle={styles.list}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingVertical: 12 }}
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, marginHorizontal: -16, },
-  tabs: {
+  container: {
+    marginHorizontal: -18, // ignores parent screen padding to span full width
+    width: width,
+    paddingHorizontal: 18,
+  },
+  tabContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
+    borderWidth: 1,
+    borderRadius: 20,
+    marginBottom: 5,
+    overflow: "hidden",
+  },
+  tab: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 5,
+    borderBottomWidth: 3,
   },
   tabText: {
     fontSize: 16,
-  },
-  activeTab: {
-    fontWeight: "bold",
-  },
-  list: {
-    paddingVertical: 16, // vertical padding only
-  },
-  programCard: {
-    width: Dimensions.get("window").width, // full screen width
-    height: 75, // compact height
-    marginBottom: 12,
+    fontWeight: "600",
   },
 });

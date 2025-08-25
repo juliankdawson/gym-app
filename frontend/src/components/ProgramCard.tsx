@@ -1,44 +1,29 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, Dimensions } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, useColorScheme } from "react-native";
 import Colors from "./colors";
 
 type Props = {
   type: string;
   title: string;
-  frequency: string;
-  style?: object;
+  days: number;
 };
 
-export default function ProgramCard({ type, title, frequency }: Props) {
+export default function ProgramCard({ type, title, days }: Props) {
   const colorScheme = useColorScheme();
-  const colors = colorScheme === "dark" ? Colors.dark : Colors.light;
-
-  const screenWidth = Dimensions.get("window").width;
-  const size = screenWidth - 32; // account for parent padding
+  const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
 
   return (
     <TouchableOpacity
       style={[
         styles.card,
-        { width: size, backgroundColor: colors.background },
+        { backgroundColor: colors.background},
       ]}
+      activeOpacity={0.85}
     >
-      <View>
-        <Text style={[styles.type, { color: colors.textMuted }]}>{type}</Text>
-        <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-      </View>
-
-      <View style={styles.bottomRow}>
-        <View
-          style={[
-            styles.frequencyButton,
-            { borderColor: colors.backgroundLight },
-          ]}
-        >
-          <Text style={[styles.frequencyText, { color: colors.text }]}>
-            {frequency}
-          </Text>
-        </View>
+      <Text style={[styles.type, { color: colors.textMuted }]}>{type}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      <View style={[styles.daysContainer, {backgroundColor: colors.backgroundLight}]}>
+        <Text style={[styles.days, { color: colors.textMuted }]}>{days}/week</Text>
       </View>
     </TouchableOpacity>
   );
@@ -46,30 +31,31 @@ export default function ProgramCard({ type, title, frequency }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
-    padding: 16,
-    height: 75, // fixed height instead of square
-    justifyContent: "space-between",
+    width: "100%",
+    height: 80,
+    paddingHorizontal: 10,
+    marginBottom: 0,
+    borderRadius: 10,
+    justifyContent: "space-evenly",
+    flexDirection: "column",
   },
   type: {
     fontSize: 12,
-    marginBottom: 2,
+    fontWeight: "400",
   },
   title: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "500",
+    lineHeight: 22,
   },
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
+  daysContainer: {
+    paddingVertical: 1,
+    width: 50,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  frequencyButton: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 2,
-    paddingHorizontal: 10,
-  },
-  frequencyText: {
+  days: {
     fontSize: 12,
+    fontWeight: "400",
   },
 });

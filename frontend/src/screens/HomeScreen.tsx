@@ -19,15 +19,16 @@ const HomeScreen: React.FC = () => {
 
   const handleTemplatePress = () => {
     console.log('Pressed New +');
-  }
+  };
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={styles.content}>
+        {/* Greeting + Today’s Workout */}
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
           Welcome back, {firstName} 👋
         </Text>
-        <Text style={[styles.title, {color: colors.text}]}>
+        <Text style={[styles.title, { color: colors.text }]}>
           Today's Workout
         </Text>
         <MainWorkoutButton
@@ -35,16 +36,20 @@ const HomeScreen: React.FC = () => {
           onPress={() => console.log('Go to workout')}
         />
         <WeekCalendar onDayPress={handleDayPress} />
-        <View style={styles.headerRow}>
-          <Text style={[styles.title, {color: colors.text}]}>Templates</Text>
+
+        {/* Templates Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Templates</Text>
           <TouchableOpacity
-            style={[styles.button, {backgroundColor: colors.background, borderColor: colors.backgroundLight}]}
+            style={[styles.newButton, { backgroundColor: colors.background, borderColor: colors.backgroundLight }]}
             onPress={handleTemplatePress}
             activeOpacity={0.8}
           >
-            <Text style={[styles.buttonText, {color: colors.text}]}>NEW +</Text>
+            <Text style={[styles.newButtonText, { color: colors.text }]}>New +</Text>
           </TouchableOpacity>
         </View>
+
+        <WorkoutTemplates />
       </View>
     </ScrollView>
   );
@@ -59,32 +64,33 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 700,
+    fontWeight: '700',
   },
   subtitle: {
     fontSize: 14,
-    fontWeight: 400,
+    fontWeight: '400',
     paddingBottom: 5,
   },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between", // pushes them apart
-    alignItems: "center", // vertically centers them
-    marginBottom: 12, // optional spacing under row
-  },
-  button: {
-    borderRadius: 12,
-    borderWidth: 1,
-    justifyContent: 'center',
+  sectionHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-end',
-    height: 40,
-    width: 100,
+    justifyContent: 'space-between',
+    marginVertical: 16,
   },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: 700,
-  }
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  newButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderWidth: 2,
+    borderRadius: 12,
+  },
+  newButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
 });
 
 export default HomeScreen;
